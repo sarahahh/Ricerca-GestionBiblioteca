@@ -12,20 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Edit, UsersIcon, Shield, UserCircle } from "lucide-react"
-import { mockApi } from "@/lib/mock-api"
+import { apiClient } from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
-
-// SUPABASE INTEGRATION:
-// Replace mockApi calls with actual API routes or Server Actions
-// Expected endpoints:
-// - GET /api/users - Fetch all users (only ADMIN)
-// - PUT /api/users/:id - Update user role (only ADMIN)
-// Example:
-// const { data, error } = await supabase
-//   .from('users')
-//   .update({ role: newRole })
-//   .eq('id', userId)
-// Remember to add RLS policies to ensure only ADMINs can access/modify users
 
 interface User {
   id: string
@@ -54,7 +42,7 @@ export default function UsuariosPage() {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.users.getAll()
+      const data = await apiClient.users.getAll()
       setUsers(data as User[])
     } catch (err) {
       setError("Error al cargar los usuarios")
@@ -74,7 +62,7 @@ export default function UsuariosPage() {
 
     try {
       setIsUpdating(true)
-      await mockApi.users.updateRole(selectedUser.id, newRole)
+      await apiClient.users.updateRole(selectedUser.id, newRole)
 
       // Update local state
       setUsers(users.map((u) => (u.id === selectedUser.id ? { ...u, role: newRole } : u)))

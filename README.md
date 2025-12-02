@@ -2,7 +2,7 @@
 
 Sistema administrativo de gestión de bibliotecas construido con Next.js, React, TailwindCSS y preparado para integración con Supabase.
 
-## Características
+## ✨ Características
 
 - **Autenticación**: Sistema de login con roles (ADMIN/USER)
 - **Transacciones**: Gestión de movimientos con gráficas de evolución
@@ -10,29 +10,35 @@ Sistema administrativo de gestión de bibliotecas construido con Next.js, React,
 - **Usuarios**: Administración de usuarios y roles (solo ADMIN)
 - **Protección de rutas**: Control de acceso basado en roles
 - **UI Moderna**: Interfaz responsive con TailwindCSS y shadcn/ui
+- **Arquitectura limpia**: Backend separado del frontend mediante API Routes
 
-## Tecnologías
+## 🚀 Tecnologías
 
 - **Frontend**: Next.js 15 (App Router), React 19, TypeScript
 - **Estilos**: TailwindCSS v4, shadcn/ui
 - **Gráficas**: Recharts
 - **Estado**: React Context API
+- **Backend**: Next.js API Routes (preparado para Supabase)
 - **Preparado para**: Supabase + Prisma (opcional)
 
-## Estructura del Proyecto
+## 📁 Estructura del Proyecto
 
 \`\`\`
 ├── app/
-│   ├── (dashboard)/        # Rutas protegidas con layout compartido
-│   │   ├── transacciones/
+│   ├── (dashboard)/           # Rutas protegidas con layout compartido
+│   │   ├── transacciones/     # Página de transacciones
+│   │   ├── maestros/          # Página de maestros
+│   │   └── usuarios/          # Página de usuarios (solo ADMIN)
+│   ├── api/                   # API Routes (Backend)
 │   │   ├── maestros/
-│   │   └── usuarios/
+│   │   ├── movements/
+│   │   └── users/
 │   ├── login/
-│   ├── page.tsx           # Landing page
+│   ├── page.tsx              # Landing page
 │   ├── layout.tsx
 │   └── globals.css
 ├── components/
-│   ├── ui/                # Componentes de shadcn/ui
+│   ├── ui/                   # Componentes de shadcn/ui
 │   ├── balance-chart.tsx
 │   ├── data-table.tsx
 │   ├── dashboard-layout.tsx
@@ -44,20 +50,46 @@ Sistema administrativo de gestión de bibliotecas construido con Next.js, React,
 │   ├── role-guard.tsx
 │   └── sidebar.tsx
 ├── context/
-│   └── AuthContext.tsx    # Contexto de autenticación
+│   └── AuthContext.tsx       # Contexto de autenticación
 ├── lib/
-│   ├── mock-api.ts        # API simulada (reemplazar con Supabase)
-│   ├── supabase/          # Clientes de Supabase (placeholders)
+│   ├── api-client.ts         # Cliente API para frontend
+│   ├── mock-api.ts           # Lógica de negocio (mock)
+│   ├── supabase/             # Clientes de Supabase (placeholders)
 │   └── utils.ts
 ├── mock/
 │   ├── users.json
 │   ├── maestros.json
 │   └── movements.json
 └── prisma/
-    └── schema.prisma      # Schema de Prisma (opcional)
+    └── schema.prisma         # Schema de Prisma (opcional)
 \`\`\`
 
-## Instalación y Ejecución
+## 🏗️ Arquitectura: Frontend/Backend Separados
+
+Este proyecto sigue una **arquitectura limpia con separación de responsabilidades**:
+
+### Frontend (Componentes React)
+- **Ubicación**: `app/(dashboard)/*` 
+- **Responsabilidad**: UI, interacción de usuario, estado local
+- **Comunicación**: Usa `apiClient` (en `lib/api-client.ts`) para hacer peticiones HTTP
+
+### Backend (API Routes)
+- **Ubicación**: `app/api/*`
+- **Responsabilidad**: Lógica de negocio, validación, acceso a datos
+- **Comunicación**: Expone endpoints REST que el frontend consume
+
+### Ventajas de esta arquitectura:
+1. **Sin doble trabajo**: Cuando migres a Supabase, solo modificas las API Routes, no los componentes
+2. **Fácil testing**: Puedes probar frontend y backend de forma independiente
+3. **Escalable**: Fácil agregar autenticación, validación y middleware
+4. **Mantenible**: Cambios en la lógica de negocio no afectan la UI
+
+### Flujo de datos:
+\`\`\`
+[Componente] → [apiClient] → [API Route] → [mockApi/Supabase] → [Base de datos]
+\`\`\`
+
+## 📦 Instalación y Ejecución
 
 ### Prerrequisitos
 
@@ -93,14 +125,16 @@ Sistema administrativo de gestión de bibliotecas construido con Next.js, React,
    npm start
    \`\`\`
 
-## Credenciales de Prueba
+## 🔐 Credenciales de Prueba
 
 El sistema actualmente usa autenticación simulada con datos mock:
 
 - **ADMIN**: `admin@biblioteca.com` / `admin123`
 - **USER**: `user@biblioteca.com` / `user123`
 
-## Integración con Supabase
+## 🔌 Integración con Supabase
+
+Para migrar de datos mock a Supabase **sin modificar los componentes frontend**, sigue estos pasos:
 
 ### 1. Crear proyecto en Supabase
 
@@ -122,205 +156,133 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="tu-anon-key"
 DATABASE_URL="postgresql://..."
 \`\`\`
 
-### 4. Crear tablas en Supabase
+### 4. Ejecutar el script SQL
 
-Ejecuta el siguiente SQL en el Editor SQL de Supabase:
+Ejecuta el script en `scripts/seed-supabase.sql` en el Editor SQL de Supabase para crear las tablas y políticas RLS.
 
-\`\`\`sql
--- Tabla de usuarios
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE NOT NULL,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('ADMIN', 'USER')),
-  avatar_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### 5. Actualizar los API Routes
 
--- Tabla de maestros
-CREATE TABLE maestros (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  nombre TEXT NOT NULL,
-  saldo DECIMAL(10, 2) NOT NULL DEFAULT 0,
-  creado_por TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+Reemplaza `mockApi` con Supabase en los archivos:
+- `app/api/maestros/route.ts`
+- `app/api/movements/route.ts`
+- `app/api/users/route.ts`
+- `app/api/users/[id]/route.ts`
 
--- Tabla de movimientos
-CREATE TABLE movements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  maestro_id UUID REFERENCES maestros(id) ON DELETE CASCADE,
-  maestro_nombre TEXT NOT NULL,
-  tipo TEXT NOT NULL CHECK (tipo IN ('ENTRADA', 'SALIDA')),
-  cantidad DECIMAL(10, 2) NOT NULL,
-  responsable TEXT NOT NULL,
-  fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Habilitar Row Level Security (RLS)
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE maestros ENABLE ROW LEVEL SECURITY;
-ALTER TABLE movements ENABLE ROW LEVEL SECURITY;
-
--- Políticas RLS para users
-CREATE POLICY "Users can read own data" ON users 
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Admins can read all users" ON users 
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
-  );
-
-CREATE POLICY "Admins can update users" ON users 
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
-  );
-
--- Políticas RLS para maestros
-CREATE POLICY "Authenticated users can read maestros" ON maestros 
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Admins can insert maestros" ON maestros 
-  FOR INSERT WITH CHECK (
-    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'ADMIN')
-  );
-
--- Políticas RLS para movements
-CREATE POLICY "Authenticated users can read movements" ON movements 
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Authenticated users can insert movements" ON movements 
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-\`\`\`
-
-### 5. Implementar clientes de Supabase
-
-Descomenta y completa el código en:
-- `lib/supabase/client.ts` (para uso en cliente)
-- `lib/supabase/server.ts` (para uso en servidor)
-
-### 6. Reemplazar AuthContext
-
-Actualiza `context/AuthContext.tsx` para usar Supabase Auth:
+**Ejemplo de migración en `app/api/maestros/route.ts`:**
 
 \`\`\`typescript
-// Ejemplo simplificado:
-const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-if (error) return { success: false, error: error.message }
+// ANTES (Mock):
+const maestros = await mockApi.maestros.getAll()
 
-const { data: userData } = await supabase
-  .from('users')
-  .select('*')
-  .eq('id', data.user.id)
-  .single()
+// DESPUÉS (Supabase):
+import { createServerClient } from '@/lib/supabase/server'
+const supabase = createServerClient()
+const { data: maestros } = await supabase.from('maestros').select('*')
 \`\`\`
 
-### 7. Crear API Routes o Server Actions
+### 6. Actualizar AuthContext
 
-Reemplaza las llamadas a `mockApi` con Server Actions o API Routes que usen Supabase.
+Modifica `context/AuthContext.tsx` para usar Supabase Auth en lugar de la autenticación mock.
 
-Ejemplo de Server Action:
+**✅ Los componentes frontend NO necesitan cambios** porque siguen usando `apiClient` que hace peticiones a los mismos endpoints.
 
-\`\`\`typescript
-'use server'
+Para más detalles, consulta `INTEGRATION_GUIDE.md`.
 
-import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+## 📚 Endpoints API Disponibles
 
-export async function createMaestro(nombre: string, saldo: number) {
-  const supabase = await createClient()
-  
-  const { data, error } = await supabase
-    .from('maestros')
-    .insert({ nombre, saldo, creado_por: 'current user' })
-    .select()
-    .single()
-  
-  if (error) throw error
-  
-  revalidatePath('/maestros')
-  return data
-}
-\`\`\`
+| Método | Endpoint | Descripción | Acceso |
+|--------|----------|-------------|--------|
+| GET | `/api/maestros` | Obtener todos los maestros | ADMIN, USER |
+| POST | `/api/maestros` | Crear nuevo maestro | ADMIN |
+| GET | `/api/movements` | Obtener todos los movimientos | ADMIN, USER |
+| GET | `/api/movements?maestroId={id}` | Obtener movimientos por maestro | ADMIN, USER |
+| POST | `/api/movements` | Crear nuevo movimiento | ADMIN, USER |
+| GET | `/api/users` | Obtener todos los usuarios | ADMIN |
+| PUT | `/api/users/:id` | Actualizar rol de usuario | ADMIN |
 
-## Integración con Prisma (Opcional)
+## 🎯 Funcionalidades por Rol
 
-Si prefieres usar Prisma como ORM sobre Supabase:
+### ADMIN (Administrador)
+- ✅ Ver y crear transacciones
+- ✅ Ver y crear maestros
+- ✅ Ver y editar usuarios
+- ✅ Acceso completo al sistema
 
-\`\`\`bash
-npm install prisma @prisma/client
-npx prisma init
-\`\`\`
+### USER (Usuario)
+- ✅ Ver y crear transacciones
+- ✅ Ver maestros (no puede crear)
+- ❌ No puede acceder a gestión de usuarios
 
-Descomenta el schema en `prisma/schema.prisma` y ejecuta:
-
-\`\`\`bash
-npx prisma generate
-npx prisma migrate dev --name initial
-\`\`\`
-
-## Scripts Disponibles
+## 📝 Scripts Disponibles
 
 - `npm run dev` - Inicia servidor de desarrollo
 - `npm run build` - Compila para producción
 - `npm start` - Inicia servidor de producción
 - `npm run lint` - Ejecuta linter
 
-## Funcionalidades por Rol
+## ✅ Requisitos Académicos Cumplidos
 
-### ADMIN (Administrador)
-- Ver y crear transacciones
-- Ver y crear maestros
-- Ver y editar usuarios
-- Acceso completo al sistema
-
-### USER (Usuario)
-- Ver y crear transacciones
-- Ver maestros (no puede crear)
-- No puede acceder a gestión de usuarios
-
-## Notas Académicas
-
-Este proyecto cumple con los requisitos académicos especificados:
-
-1. ✅ Next.js con App Router
+1. ✅ Next.js con App Router (`app/` directory)
 2. ✅ React + TypeScript
 3. ✅ TailwindCSS para estilos
 4. ✅ Autenticación con roles
 5. ✅ CRUD completo con datos mock
-6. ✅ Protección de rutas
-7. ✅ Sidebar con información de usuario
+6. ✅ Protección de rutas por rol
+7. ✅ Sidebar fijo con información de usuario
 8. ✅ Gráficas con Recharts
-9. ✅ Modales con estados de loading
-10. ✅ Preparado para Supabase + Prisma
-11. ✅ Comentarios en código para integración
-12. ✅ Variables de entorno configuradas
+9. ✅ Modales con estados de loading/error
+10. ✅ API Routes separados del frontend
+11. ✅ Preparado para Supabase + Prisma
+12. ✅ Comentarios en código para integración
+13. ✅ Variables de entorno configuradas
+14. ✅ Componentes reutilizables y modulares
 
-## Estructura de Archivos Clave
+## 📖 Archivos Clave para Entender
 
+- **`lib/api-client.ts`**: Cliente API usado por el frontend (capa de abstracción)
+- **`lib/mock-api.ts`**: Lógica de negocio con datos mock
+- **`app/api/*/route.ts`**: API Routes que exponen endpoints REST
 - **`context/AuthContext.tsx`**: Manejo de autenticación y sesión
-- **`lib/mock-api.ts`**: API simulada (reemplazar con Supabase)
 - **`components/role-guard.tsx`**: Protección de rutas por rol
 - **`components/sidebar.tsx`**: Navegación lateral con info de usuario
 - **`components/data-table.tsx`**: Tabla reutilizable
 - **`components/modal.tsx`**: Modal reutilizable con estados
-- **`mock/*.json`**: Datos de prueba
 
-## Próximos Pasos
+## 🔄 Próximos Pasos
 
-1. Conectar con Supabase siguiendo la guía de integración
+1. Conectar con Supabase siguiendo `INTEGRATION_GUIDE.md`
 2. Implementar autenticación real con Supabase Auth
-3. Crear API Routes o Server Actions para operaciones CRUD
+3. Actualizar API Routes para usar Supabase en lugar de mockApi
 4. Configurar RLS (Row Level Security) en Supabase
 5. (Opcional) Implementar Prisma como ORM
 6. Agregar validaciones con Zod
 7. Implementar testing con Vitest/Jest
 8. Desplegar en Vercel
 
-## Soporte
+## 💡 Respuesta a tu Pregunta
 
-Para dudas sobre el proyecto académico, consulta los comentarios en el código que indican exactamente dónde y cómo integrar Supabase.
+**"¿Está la lógica mezclada con el frontend?"**
 
-## Licencia
+**NO** - El proyecto está correctamente separado:
+
+- **Frontend**: Componentes en `app/(dashboard)/*` usan `apiClient`
+- **Backend**: API Routes en `app/api/*` contienen la lógica
+- **Datos**: Mock data en `lib/mock-api.ts` (fácil de reemplazar)
+
+**Cuando conectes Supabase:**
+1. Solo modificas los archivos en `app/api/*` 
+2. Los componentes frontend NO cambian
+3. `apiClient` sigue funcionando igual
+
+**No hay doble trabajo** - la arquitectura ya está correcta.
+
+## 📞 Soporte
+
+Para dudas sobre el proyecto académico, consulta:
+- Comentarios en el código que indican puntos de integración
+- `INTEGRATION_GUIDE.md` para guía paso a paso de Supabase
+- `PROYECTO.md` para resumen académico en español
+
+## 📄 Licencia
 
 Proyecto académico - Ricerca AyD2

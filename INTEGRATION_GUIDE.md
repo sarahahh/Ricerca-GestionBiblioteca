@@ -611,4 +611,4 @@ En Supabase Dashboard:
 - [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 \`\`\`
 
-```json file="" isHidden
+\`\`\`json file="" isHidden

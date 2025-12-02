@@ -16,24 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, TrendingUp, TrendingDown } from "lucide-react"
-import { mockApi } from "@/lib/mock-api"
+import { apiClient } from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
-
-// SUPABASE INTEGRATION:
-// Replace mockApi calls with actual API routes or Server Actions
-// Expected endpoints:
-// - GET /api/maestros - Fetch all maestros
-// - GET /api/movements?maestroId={id} - Fetch movements for a maestro
-// - POST /api/movements - Create new movement
-// Example with Server Action:
-// async function createMovement(formData: FormData) {
-//   'use server'
-//   const supabase = createServerClient(...)
-//   const { data, error } = await supabase
-//     .from('movements')
-//     .insert({ maestro_id, tipo, cantidad, responsable })
-//   revalidatePath('/transacciones')
-// }
 
 interface Maestro {
   id: string
@@ -76,8 +60,8 @@ export default function TransaccionesPage() {
     try {
       setLoading(true)
       setError(null)
-      const maestrosData = await mockApi.maestros.getAll()
-      const movementsData = await mockApi.movements.getAll()
+      const maestrosData = await apiClient.maestros.getAll()
+      const movementsData = await apiClient.movements.getAll()
       setMaestros(maestrosData)
       setMovements(movementsData)
       if (maestrosData.length > 0 && !selectedMaestro) {
@@ -118,7 +102,7 @@ export default function TransaccionesPage() {
 
     try {
       setIsCreating(true)
-      const newMovement = await mockApi.movements.create({
+      const newMovement = await apiClient.movements.create({
         maestroId: selectedMaestro,
         maestroNombre: selectedMaestroData.nombre,
         tipo: formData.tipo,

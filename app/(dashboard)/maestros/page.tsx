@@ -11,19 +11,8 @@ import { ErrorState } from "@/components/error-state"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, FolderOpen } from "lucide-react"
-import { mockApi } from "@/lib/mock-api"
+import { apiClient } from "@/lib/api-client"
 import { useToast } from "@/hooks/use-toast"
-
-// SUPABASE INTEGRATION:
-// Replace mockApi calls with actual API routes or Server Actions
-// Expected endpoints:
-// - GET /api/maestros - Fetch all maestros (accessible to ADMIN and USER)
-// - POST /api/maestros - Create new maestro (only ADMIN)
-// Example:
-// const { data, error } = await supabase
-//   .from('maestros')
-//   .insert({ nombre, saldo, creado_por: user.name })
-//   .select()
 
 interface Maestro {
   id: string
@@ -56,7 +45,7 @@ export default function MaestrosPage() {
     try {
       setLoading(true)
       setError(null)
-      const data = await mockApi.maestros.getAll()
+      const data = await apiClient.maestros.getAll()
       setMaestros(data)
     } catch (err) {
       setError("Error al cargar los maestros")
@@ -70,7 +59,7 @@ export default function MaestrosPage() {
 
     try {
       setIsCreating(true)
-      const newMaestro = await mockApi.maestros.create({
+      const newMaestro = await apiClient.maestros.create({
         nombre: formData.nombre,
         saldo: Number.parseFloat(formData.saldo),
         creadoPor: user.name,
